@@ -25,14 +25,17 @@ const app = express();
 
 // Endpoint to retrieve data from a JSON file
 app.get("/api/data/:generation/:number/:key", (req, res) => {
-  const generation = req.params.fileName;
+  const generation = req.params.generation;
   const number = req.params.number;
   const key = req.params.key;
 
+  console.log(generation);
+
   let inputName, imageUri, type, clothes, ears, mouth, eyes, species, eyewear, backgroundd;
 
-  if (generation === 2) {
+  if (generation === "2") {
     inputName = `SMB #${number}`;
+    console.log(inputName);
     imageUri = findImageUrisByName(jsonData, inputName).toString();
     type = findTraitByName(jsonData, inputName, "Type");
     clothes = findTraitByName(jsonData, inputName, "Clothes");
@@ -42,8 +45,9 @@ app.get("/api/data/:generation/:number/:key", (req, res) => {
     hat = findTraitByName(jsonData, inputName, "Hat");
   }
 
-  if (generation === 3) {
+  if (generation === "3") {
     inputName = `SMB Gen3 #${number}`;
+    console.log(inputName);
     imageUri = findGen3ImageUrisByName(gen3JsonData, inputName).toString();
     species = findGen3TraitByName(gen3JsonData, inputName, "Species");
     hat = findGen3TraitByName(gen3JsonData, inputName, "Hat");
