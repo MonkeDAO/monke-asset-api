@@ -46,7 +46,7 @@ async function appendMonkeToBanner(monkeyImageUrl, backgroundImagePath) {
     monkeyImage.scan(0, 0, monkeyImage.bitmap.width, monkeyImage.bitmap.height, (x, y, idx) => {
       const pixel = Jimp.intToRGBA(monkeyImage.getPixelColor(x, y));
       if (pixel.r === commonColor.r && pixel.g === commonColor.g && pixel.b === commonColor.b) {
-        transparentImage.bitmap.data[idx + 3] = 0; // Set the alpha channel to 0 (transparent)
+        transparentImage.bitmap.data[idx + 3] = 0;
       } else {
         transparentImage.bitmap.data[idx] = pixel.r;
         transparentImage.bitmap.data[idx + 1] = pixel.g;
