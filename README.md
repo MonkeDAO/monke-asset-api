@@ -9,6 +9,10 @@
 5. Mouth - https://localhost:3000/api/data/2/<number>/mouth
 6. Eyes - https://localhost:3000/api/data/2/<number>/eyes
 7. Hat - https://localhost:3000/api/data/2/<number>/hat
+8. Dressup - https://localhost:3000/api/dressup/2/<number>/<type>/<key>
+
+type - check folders in the gen2assets folder
+key - check files in the required type folder in gen2assets folder
 
 ## For Gen 3
 

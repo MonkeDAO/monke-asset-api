@@ -7,6 +7,7 @@ const {
   findTraitByName,
   findGen3TraitByName,
 } = require("./utils/fetch");
+const { appendMonkeToWallpaper, appendMonkeToBanner } = require("./utils/gen2dressup");
 
 const monkeDataPath = path.join(__dirname, ".", "data", "monkeList.json");
 const gen3DataPath = path.join(__dirname, ".", "data", "gen3List.json");
@@ -89,6 +90,27 @@ app.get("/api/data/:generation/:number/:key", (req, res) => {
   } else {
     return res.status(404).json({ error: "Key not found" });
   }
+});
+
+app.get("/api/dressup/2/:number/:type/:key", (req, res) => {
+  const number = req.params.number;
+  const type = req.params.type;
+  const key = req.params.key;
+  inputName = `SMB #${number}`;
+  imageUri = findImageUrisByName(jsonData, inputName).toString();
+  assetPath = path.join(__dirname, "..", "gen2assets", type, key);
+
+  if (type === "banners") {
+    appendMonkeToBanner(imageUri, assetPath);
+  } else if (type === "wallpapers") {
+    appendMonkeToWallpaper(imageUri, assetPath);
+  }
+});
+
+app.get("/api/dressup/3/:number/:key", (req, res) => {
+  const generation = 2;
+  const number = req.params.number;
+  const key = req.params.key;
 });
 
 // Start the server
