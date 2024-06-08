@@ -7,7 +7,11 @@ const {
   findTraitByName,
   findGen3TraitByName,
 } = require("./utils/fetch");
-const { appendMonkeToWallpaper, appendMonkeToBanner } = require("./utils/gen2dressup");
+const {
+  appendMonkeToWallpaper,
+  appendMonkeToBanner,
+  appendMonkeToWatchFace,
+} = require("./utils/gen2dressup");
 
 const monkeDataPath = path.join(__dirname, ".", "data", "monkeList.json");
 const gen3DataPath = path.join(__dirname, ".", "data", "gen3List.json");
@@ -104,6 +108,8 @@ app.get("/api/dressup/2/:number/:type/:key", (req, res) => {
     appendMonkeToBanner(imageUri, assetPath);
   } else if (type === "wallpapers") {
     appendMonkeToWallpaper(imageUri, assetPath);
+  } else if (type === "watchfaces") {
+    appendMonkeToWatchFace(imageUri, assetPath);
   }
 });
 

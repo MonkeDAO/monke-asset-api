@@ -65,6 +65,38 @@ async function appendMonkeToBanner(monkeyImageUrl, backgroundImagePath) {
   }
 }
 
+async function appendMonkeToWatchFace(monkeyImageUrl, backgroundImagePath) {
+  try {
+    const monkeyImage = await Jimp.read(monkeyImageUrl);
+    const backgroundImage = await Jimp.read(backgroundImagePath);
+    const commonColor = await getCommonColor(monkeyImage);
+    const transparentImage = new Jimp(
+      monkeyImage.bitmap.width,
+      monkeyImage.bitmap.height,
+      0x00000000
+    );
+    monkeyImage.scan(0, 0, monkeyImage.bitmap.width, monkeyImage.bitmap.height, (x, y, idx) => {
+      const pixel = Jimp.intToRGBA(monkeyImage.getPixelColor(x, y));
+      if (pixel.r === commonColor.r && pixel.g === commonColor.g && pixel.b === commonColor.b) {
+        transparentImage.bitmap.data[idx + 3] = 0;
+      } else {
+        transparentImage.bitmap.data[idx] = pixel.r;
+        transparentImage.bitmap.data[idx + 1] = pixel.g;
+        transparentImage.bitmap.data[idx + 2] = pixel.b;
+        transparentImage.bitmap.data[idx + 3] = pixel.a;
+      }
+    });
+
+    transparentImage.scale(2);
+    backgroundImage.composite(transparentImage, 25, 25);
+
+    await backgroundImage.writeAsync("reqmonkewatchface.png");
+    console.log("Image saved as reqmonkewatchface.png");
+  } catch (err) {
+    console.error("Error:", err);
+  }
+}
+
 async function getCommonColor(image) {
   const colorMap = {};
   image.scan(0, 0, image.bitmap.width, image.bitmap.height, (x, y, idx) => {
@@ -87,4 +119,5 @@ async function getCommonColor(image) {
 module.exports = {
   appendMonkeToWallpaper,
   appendMonkeToBanner,
+  appendMonkeToWatchFace,
 };
