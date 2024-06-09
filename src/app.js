@@ -12,6 +12,8 @@ const {
   appendMonkeToBanner,
   appendMonkeToWatchFace,
   appendMonkeToBackground,
+  removeMonkeBackground,
+  appendSombreroToMonke,
 } = require("./utils/gen2dressup");
 
 const monkeDataPath = path.join(__dirname, ".", "data", "monkeList.json");
@@ -113,7 +115,18 @@ app.get("/api/dressup/2/:number/:type/:key", (req, res) => {
     appendMonkeToWatchFace(imageUri, assetPath);
   } else if (type === "pfp_backgrounds") {
     appendMonkeToBackground(imageUri, assetPath);
+  } else if (type === "sombreros") {
+    appendSombreroToMonke(imageUri, assetPath);
   }
+});
+
+app.get("/api/dressup/2/:number/nobg", (req, res) => {
+  const generation = 2;
+  const number = req.params.number;
+  inputName = `SMB #${number}`;
+  imageUri = findImageUrisByName(jsonData, inputName).toString();
+
+  removeMonkeBackground(imageUri);
 });
 
 app.get("/api/dressup/3/:number/:key", (req, res) => {
