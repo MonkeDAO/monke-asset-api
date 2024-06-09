@@ -1,5 +1,7 @@
 const Jimp = require("jimp");
-const axios = require("axios");
+const GIFEncoder = require("gif-encoder");
+const fs = require("fs");
+const path = require("path");
 
 async function appendMonkeToWallpaper(monkeyImageUrl, backgroundImagePath) {
   try {
@@ -143,6 +145,20 @@ async function appendSombreroToMonke(monkeyImageUrl, backgroundImagePath) {
   }
 }
 
+async function appendOutfitToMonke(monkeyImageUrl, backgroundImagePath) {
+  try {
+    const monkeyImage = await Jimp.read(monkeyImageUrl);
+    const backgroundImage = await Jimp.read(backgroundImagePath);
+
+    monkeyImage.composite(backgroundImage, 0, 0);
+
+    await monkeyImage.writeAsync("reqmonkeoutfit.png");
+    console.log("Image saved as reqmonkeoutfit.png");
+  } catch (err) {
+    console.error("Error:", err);
+  }
+}
+
 async function removeMonkeBackground(monkeyImageUrl) {
   try {
     const monkeyImage = await Jimp.read(monkeyImageUrl);
@@ -168,6 +184,42 @@ async function removeMonkeBackground(monkeyImageUrl) {
 
     await transparentImage.writeAsync("reqmonkenobg.png");
     console.log("Image saved as reqmonkenobg.png");
+  } catch (err) {
+    console.error("Error:", err);
+  }
+}
+
+async function appendGifToMonke(monkeyImageUrl, gifFilePath) {
+  try {
+    // Load the monkey image
+    const monkeyImage = await Jimp.read(monkeyImageUrl);
+
+    // Load the GIF
+    const gifData = fs.readFileSync(gifFilePath);
+    const gifEncoder = new GIFEncoder(monkeyImage.bitmap.width, monkeyImage.bitmap.height);
+
+    // Process each frame of the GIF
+    let frameIndex = 0;
+    while (frameIndex < gifData.length) {
+      const frameData = gifData.slice(frameIndex, frameIndex + 4);
+      const frameImage = await Jimp.read(Buffer.from(frameData));
+
+      // Composite the GIF frame onto the monkey image
+      const x = 0; // X-coordinate to place the GIF frame
+      const y = 0; // Y-coordinate to place the GIF frame
+      monkeyImage.composite(frameImage, x, y);
+
+      // Add the composited frame to the GIF encoder
+      gifEncoder.setDelay(10); // Set the delay between frames (in milliseconds)
+      gifEncoder.start();
+      gifEncoder.addFrame(monkeyImage.bitmap.data);
+      gifEncoder.finish();
+    }
+
+    // Write the output GIF file
+    const outputBuffer = gifEncoder.stream().toBitStream();
+    fs.writeFileSync("result.gif", buffer);
+    console.log(`GIF saved as result.gif`);
   } catch (err) {
     console.error("Error:", err);
   }
@@ -199,4 +251,6 @@ module.exports = {
   appendMonkeToBackground,
   removeMonkeBackground,
   appendSombreroToMonke,
+  appendOutfitToMonke,
+  appendGifToMonke,
 };

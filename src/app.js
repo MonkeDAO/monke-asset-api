@@ -14,6 +14,8 @@ const {
   appendMonkeToBackground,
   removeMonkeBackground,
   appendSombreroToMonke,
+  appendOutfitToMonke,
+  appendGifToMonke,
 } = require("./utils/gen2dressup");
 
 const monkeDataPath = path.join(__dirname, ".", "data", "monkeList.json");
@@ -117,6 +119,10 @@ app.get("/api/dressup/2/:number/:type/:key", (req, res) => {
     appendMonkeToBackground(imageUri, assetPath);
   } else if (type === "sombreros") {
     appendSombreroToMonke(imageUri, assetPath);
+  } else if (type === "outfits") {
+    appendOutfitToMonke(imageUri, assetPath);
+  } else if (type === "gifs") {
+    appendGifToMonke(imageUri, assetPath);
   }
 });
 
