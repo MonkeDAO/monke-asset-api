@@ -11,6 +11,7 @@ const {
   appendMonkeToWallpaper,
   appendMonkeToBanner,
   appendMonkeToWatchFace,
+  appendMonkeToBackground,
 } = require("./utils/gen2dressup");
 
 const monkeDataPath = path.join(__dirname, ".", "data", "monkeList.json");
@@ -110,6 +111,8 @@ app.get("/api/dressup/2/:number/:type/:key", (req, res) => {
     appendMonkeToWallpaper(imageUri, assetPath);
   } else if (type === "watchfaces") {
     appendMonkeToWatchFace(imageUri, assetPath);
+  } else if (type === "pfp_backgrounds") {
+    appendMonkeToBackground(imageUri, assetPath);
   }
 });
 
