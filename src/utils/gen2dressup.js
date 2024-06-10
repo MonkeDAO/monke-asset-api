@@ -1,5 +1,6 @@
 const Jimp = require("jimp");
-const GIFEncoder = require("gif-encoder");
+const { GifCodec, GifFrame, BitmapImage } = require("gifwrap");
+const axios = require("axios");
 const fs = require("fs");
 const path = require("path");
 
@@ -189,39 +190,57 @@ async function removeMonkeBackground(monkeyImageUrl) {
   }
 }
 
-async function appendGifToMonke(monkeyImageUrl, gifFilePath) {
+async function compositeGIFOverImage(imageUrl, gifPath, outputPath) {
   try {
-    // Load the monkey image
-    const monkeyImage = await Jimp.read(monkeyImageUrl);
+    // Step 1: Download the image using axios
+    const response = await axios({
+      url: imageUrl,
+      method: "GET",
+      responseType: "arraybuffer",
+    });
+    const imageBuffer = Buffer.from(response.data);
+    const baseImage = await Jimp.read(imageBuffer);
 
-    // Load the GIF
-    const gifData = fs.readFileSync(gifFilePath);
-    const gifEncoder = new GIFEncoder(monkeyImage.bitmap.width, monkeyImage.bitmap.height);
+    // Step 2: Load the GIF
+    const gifData = fs.readFileSync(gifPath);
+    const gifCodec = new GifCodec();
+    const gif = await gifCodec.decodeGif(gifData);
 
-    // Process each frame of the GIF
-    let frameIndex = 0;
-    while (frameIndex < gifData.length) {
-      const frameData = gifData.slice(frameIndex, frameIndex + 4);
-      const frameImage = await Jimp.read(Buffer.from(frameData));
+    // Step 3: Prepare a sequence of frames for the new GIF
+    const outputFrames = [];
 
-      // Composite the GIF frame onto the monkey image
-      const x = 0; // X-coordinate to place the GIF frame
-      const y = 0; // Y-coordinate to place the GIF frame
-      monkeyImage.composite(frameImage, x, y);
+    for (const frame of gif.frames) {
+      // Convert each frame to a Jimp image
+      const gifFrame = new Jimp(frame.bitmap.width, frame.bitmap.height);
+      gifFrame.bitmap = frame.bitmap;
 
-      // Add the composited frame to the GIF encoder
-      gifEncoder.setDelay(10); // Set the delay between frames (in milliseconds)
-      gifEncoder.start();
-      gifEncoder.addFrame(monkeyImage.bitmap.data);
-      gifEncoder.finish();
+      // Create a new Jimp image to composite GIF frame over the base image
+      const compositeImage = baseImage.clone();
+
+      // Composite GIF frame over the base image at a specified position (e.g., top-left corner)
+      compositeImage.composite(gifFrame, 0, 0, {
+        mode: Jimp.BLEND_SOURCE_OVER,
+        opacitySource: 1,
+        opacityDest: 1,
+      });
+
+      // Convert the composited image to a GIF frame
+      const newFrame = new GifFrame(new BitmapImage(compositeImage.bitmap));
+      newFrame.delayCentisecs = frame.delayCentisecs; // Preserve the frame delay
+
+      // Add the frame to the output sequence
+      outputFrames.push(newFrame);
     }
 
-    // Write the output GIF file
-    const outputBuffer = gifEncoder.stream().toBitStream();
-    fs.writeFileSync("result.gif", buffer);
-    console.log(`GIF saved as result.gif`);
-  } catch (err) {
-    console.error("Error:", err);
+    // Step 4: Encode the sequence of frames into a new GIF
+    const outputGif = await gifCodec.encodeGif(outputFrames);
+
+    // Step 5: Save the output GIF
+    fs.writeFileSync(outputPath, outputGif.buffer);
+
+    console.log(`Animated GIF saved successfully to ${outputPath}`);
+  } catch (error) {
+    console.error("Error:", error);
   }
 }
 
@@ -252,5 +271,5 @@ module.exports = {
   removeMonkeBackground,
   appendSombreroToMonke,
   appendOutfitToMonke,
-  appendGifToMonke,
+  compositeGIFOverImage,
 };
