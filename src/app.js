@@ -152,7 +152,16 @@ app.get("/api/dressup/2/:number/nobg", async (req, res) => {
   imageUri = findImageUrisByName(jsonData, inputName).toString();
   const outputPath = path.join(__dirname, "..", "results", `result.png`);
 
-  removeMonkeBackground(imageUri, outputPath);
+  const resultPath = await removeMonkeBackground(imageUri, outputPath);
+  return res.status(200).sendFile(resultPath, (err) => {
+    if (err) {
+      res.status(500).json({
+        success: false,
+        message: "Failed to send the file",
+        error: err.message,
+      });
+    }
+  });
 });
 
 app.get("/api/dressup/3/:number/:key", (req, res) => {
