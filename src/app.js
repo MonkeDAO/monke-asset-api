@@ -101,38 +101,58 @@ app.get("/api/data/:generation/:number/:key", (req, res) => {
   }
 });
 
-app.get("/api/dressup/2/:number/:type/:key", (req, res) => {
+app.get("/api/dressup/2/:number/:type/:key", async (req, res) => {
   const number = req.params.number;
   const type = req.params.type;
   const key = req.params.key;
   inputName = `SMB #${number}`;
   imageUri = findImageUrisByName(jsonData, inputName).toString();
   assetPath = path.join(__dirname, "..", "gen2assets", type, key);
+  let outputPath, resultPath;
+
+  if (type === "gifs") {
+    outputPath = path.join(__dirname, "..", "results", "result.gif");
+  } else {
+    outputPath = path.join(__dirname, "..", "results", `result.png`);
+  }
 
   if (type === "banners") {
-    appendMonkeToBanner(imageUri, assetPath);
+    resultPath = await appendMonkeToBanner(imageUri, assetPath, outputPath);
   } else if (type === "wallpapers") {
-    appendMonkeToWallpaper(imageUri, assetPath);
+    resultPath = await appendMonkeToWallpaper(imageUri, assetPath, outputPath);
   } else if (type === "watchfaces") {
-    appendMonkeToWatchFace(imageUri, assetPath);
+    resultPath = await appendMonkeToWatchFace(imageUri, assetPath, outputPath);
   } else if (type === "pfp_backgrounds") {
-    appendMonkeToBackground(imageUri, assetPath);
+    resultPath = await appendMonkeToBackground(imageUri, assetPath, outputPath);
   } else if (type === "sombreros") {
-    appendSombreroToMonke(imageUri, assetPath);
+    resultPath = await appendSombreroToMonke(imageUri, assetPath, outputPath);
   } else if (type === "outfits") {
-    appendOutfitToMonke(imageUri, assetPath);
+    resultPath = await appendOutfitToMonke(imageUri, assetPath, outputPath);
   } else if (type === "gifs") {
-    compositeGIFOverImage(imageUri, assetPath, "output.gif");
+    resultPath = await compositeGIFOverImage(imageUri, assetPath, outputPath);
+  } else {
+    return res.status(404).json({ error: "Type not found" });
   }
+
+  return res.status(200).sendFile(resultPath, (err) => {
+    if (err) {
+      res.status(500).json({
+        success: false,
+        message: "Failed to send the file",
+        error: err.message,
+      });
+    }
+  });
 });
 
-app.get("/api/dressup/2/:number/nobg", (req, res) => {
+app.get("/api/dressup/2/:number/nobg", async (req, res) => {
   const generation = 2;
   const number = req.params.number;
   inputName = `SMB #${number}`;
   imageUri = findImageUrisByName(jsonData, inputName).toString();
+  const outputPath = path.join(__dirname, "..", "results", `result.png`);
 
-  removeMonkeBackground(imageUri);
+  removeMonkeBackground(imageUri, outputPath);
 });
 
 app.get("/api/dressup/3/:number/:key", (req, res) => {

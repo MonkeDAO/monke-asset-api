@@ -4,7 +4,7 @@ const axios = require("axios");
 const fs = require("fs");
 const path = require("path");
 
-async function appendMonkeToWallpaper(monkeyImageUrl, backgroundImagePath) {
+async function appendMonkeToWallpaper(monkeyImageUrl, backgroundImagePath, outputPath) {
   try {
     const monkeyImage = await Jimp.read(monkeyImageUrl);
     const backgroundImage = await Jimp.read(backgroundImagePath);
@@ -29,14 +29,15 @@ async function appendMonkeToWallpaper(monkeyImageUrl, backgroundImagePath) {
     transparentImage.scale(3);
     backgroundImage.composite(transparentImage, 450, 2700);
 
-    await backgroundImage.writeAsync("reqmonkewallpaper.png");
-    console.log("Image saved as reqmonkewallpaper.png");
+    await backgroundImage.writeAsync(outputPath);
+    console.log(`Image saved as ${outputPath}`);
+    return outputPath;
   } catch (err) {
     console.error("Error:", err);
   }
 }
 
-async function appendMonkeToBanner(monkeyImageUrl, backgroundImagePath) {
+async function appendMonkeToBanner(monkeyImageUrl, backgroundImagePath, outputPath) {
   try {
     const monkeyImage = await Jimp.read(monkeyImageUrl);
     const backgroundImage = await Jimp.read(backgroundImagePath);
@@ -61,14 +62,15 @@ async function appendMonkeToBanner(monkeyImageUrl, backgroundImagePath) {
     transparentImage.scale(1.75);
     backgroundImage.composite(transparentImage, 1500, 330);
 
-    await backgroundImage.writeAsync("reqmonkebanner.png");
-    console.log("Image saved as reqmonkebanner.png");
+    await backgroundImage.writeAsync(outputPath);
+    console.log(`Image saved as ${outputPath}`);
+    return outputPath;
   } catch (err) {
     console.error("Error:", err);
   }
 }
 
-async function appendMonkeToWatchFace(monkeyImageUrl, backgroundImagePath) {
+async function appendMonkeToWatchFace(monkeyImageUrl, backgroundImagePath, outputPath) {
   try {
     const monkeyImage = await Jimp.read(monkeyImageUrl);
     const backgroundImage = await Jimp.read(backgroundImagePath);
@@ -93,14 +95,15 @@ async function appendMonkeToWatchFace(monkeyImageUrl, backgroundImagePath) {
     transparentImage.scale(2);
     backgroundImage.composite(transparentImage, 25, 25);
 
-    await backgroundImage.writeAsync("reqmonkewatchface.png");
-    console.log("Image saved as reqmonkewatchface.png");
+    await backgroundImage.writeAsync(outputPath);
+    console.log(`Image saved as ${outputPath}`);
+    return outputPath;
   } catch (err) {
     console.error("Error:", err);
   }
 }
 
-async function appendMonkeToBackground(monkeyImageUrl, backgroundImagePath) {
+async function appendMonkeToBackground(monkeyImageUrl, backgroundImagePath, outputPath) {
   try {
     const monkeyImage = await Jimp.read(monkeyImageUrl);
     const backgroundImage = await Jimp.read(backgroundImagePath);
@@ -125,42 +128,45 @@ async function appendMonkeToBackground(monkeyImageUrl, backgroundImagePath) {
     transparentImage.scale(1);
     backgroundImage.composite(transparentImage, 0, 0);
 
-    await backgroundImage.writeAsync("reqmonkebg.png");
-    console.log("Image saved as reqmonkebg.png");
+    await backgroundImage.writeAsync(outputPath);
+    console.log(`Image saved as ${outputPath}`);
+    return outputPath;
   } catch (err) {
     console.error("Error:", err);
   }
 }
 
-async function appendSombreroToMonke(monkeyImageUrl, backgroundImagePath) {
+async function appendSombreroToMonke(monkeyImageUrl, backgroundImagePath, outputPath) {
   try {
     const monkeyImage = await Jimp.read(monkeyImageUrl);
     const backgroundImage = await Jimp.read(backgroundImagePath);
 
     monkeyImage.composite(backgroundImage, 0, 0);
 
-    await monkeyImage.writeAsync("reqmonkesombrero.png");
-    console.log("Image saved as reqmonkesombrero.png");
+    await monkeyImage.writeAsync(outputPath);
+    console.log(`Image saved as ${outputPath}`);
+    return outputPath;
   } catch (err) {
     console.error("Error:", err);
   }
 }
 
-async function appendOutfitToMonke(monkeyImageUrl, backgroundImagePath) {
+async function appendOutfitToMonke(monkeyImageUrl, backgroundImagePath, outputPath) {
   try {
     const monkeyImage = await Jimp.read(monkeyImageUrl);
     const backgroundImage = await Jimp.read(backgroundImagePath);
 
     monkeyImage.composite(backgroundImage, 0, 0);
 
-    await monkeyImage.writeAsync("reqmonkeoutfit.png");
-    console.log("Image saved as reqmonkeoutfit.png");
+    await monkeyImage.writeAsync(outputPath);
+    console.log(`Image saved as ${outputPath}`);
+    return outputPath;
   } catch (err) {
     console.error("Error:", err);
   }
 }
 
-async function removeMonkeBackground(monkeyImageUrl) {
+async function removeMonkeBackground(monkeyImageUrl, outputPath) {
   try {
     const monkeyImage = await Jimp.read(monkeyImageUrl);
     const commonColor = await getCommonColor(monkeyImage);
@@ -183,8 +189,9 @@ async function removeMonkeBackground(monkeyImageUrl) {
 
     transparentImage.scale(1);
 
-    await transparentImage.writeAsync("reqmonkenobg.png");
-    console.log("Image saved as reqmonkenobg.png");
+    await transparentImage.writeAsync(outputPath);
+    console.log(`Image saved as ${outputPath}`);
+    return outputPath;
   } catch (err) {
     console.error("Error:", err);
   }
@@ -229,6 +236,7 @@ async function compositeGIFOverImage(imageUrl, gifPath, outputPath) {
     fs.writeFileSync(outputPath, outputGif.buffer);
 
     console.log(`Animated GIF saved successfully to ${outputPath}`);
+    return outputPath;
   } catch (error) {
     console.error("Error:", error);
   }
