@@ -31,9 +31,17 @@ function findGen3TraitByName(data, name, traitt) {
   }
 }
 
+function findAllTraits(data, name) {
+  const entry = data.find((entry) => entry.mint.name === name);
+  if (entry) {
+    return entry.mint.attributes;
+  }
+}
+
 module.exports = {
   findImageUrisByName,
   findGen3ImageUrisByName,
   findTraitByName,
   findGen3TraitByName,
+  findAllTraits,
 };

@@ -6,6 +6,7 @@ const {
   findGen3ImageUrisByName,
   findTraitByName,
   findGen3TraitByName,
+  findAllTraits,
 } = require("./utils/fetch");
 const {
   appendMonkeToWallpaper,
@@ -33,7 +34,12 @@ try {
 
 const app = express();
 
-// Endpoint to retrieve data from a JSON file
+app.get("/api/data/2/:number/traits", (req, res) => {
+  const number = req.params.number;
+  const traits = findAllTraits(jsonData, `SMB #${number}`);
+  return res.status(200).json({ traits });
+});
+
 app.get("/api/data/:generation/:number/:key", (req, res) => {
   const generation = req.params.generation;
   const number = req.params.number;
@@ -170,7 +176,6 @@ app.get("/api/dressup/3/:number/:key", (req, res) => {
   const key = req.params.key;
 });
 
-// Start the server
 app.listen(3000, () => {
   console.log("API server is running on port 3000");
 });
