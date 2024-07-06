@@ -25,3 +25,10 @@ key - check files in the required type folder in gen2assets folder
 7. Background - https://localhost:3000/api/data/3/_number_/backgroundd // Note the two d's
 8. Eyes - https://localhost:3000/api/data/3/_number_/eyes
 9. Back - https://localhost:3000/api/data/3/_number_/back
+
+# Contribution guidelines
+
+- For adding specific assets for gen2, navigate to gen2assets and add the asset in the appopriate folder
+- For modifying size of gen2 monke on the assets, navigate to src/utils/gen2dressup.js and change the value of transparentImage.scale(value) to the desired value, and for position, change the values of x and y in the compositeImage.composite(transparentImage, x, y).
+- For adding gen3 dressup create a new file in src/utils called gen3dressup.js and add the functions you need, and create a new route in app.js for the new function.
+- If you're creating gen3 dressup create a folder called gen3assets and add the assets there and then add the asset path in app.js
