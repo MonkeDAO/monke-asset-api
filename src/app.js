@@ -111,9 +111,9 @@ app.get("/api/dressup/2/:number/:type/:key", async (req, res) => {
   const number = req.params.number;
   const type = req.params.type;
   const key = req.params.key;
-  inputName = `SMB #${number}`;
-  imageUri = findImageUrisByName(jsonData, inputName).toString();
-  assetPath = path.join(__dirname, "..", "gen2assets", type, key);
+  const inputName = `SMB #${number}`;
+  const imageUri = findImageUrisByName(jsonData, inputName).toString();
+  const assetPath = path.join(__dirname, "..", "gen2assets", type, key);
   let outputPath, resultPath;
 
   if (type === "gifs") {
@@ -122,52 +122,71 @@ app.get("/api/dressup/2/:number/:type/:key", async (req, res) => {
     outputPath = path.join(__dirname, "..", "results", `result.png`);
   }
 
-  if (type === "banners") {
-    resultPath = await appendMonkeToBanner(imageUri, assetPath, outputPath);
-  } else if (type === "wallpapers") {
-    resultPath = await appendMonkeToWallpaper(imageUri, assetPath, outputPath);
-  } else if (type === "watchfaces") {
-    resultPath = await appendMonkeToWatchFace(imageUri, assetPath, outputPath);
-  } else if (type === "pfp_backgrounds") {
-    resultPath = await appendMonkeToBackground(imageUri, assetPath, outputPath);
-  } else if (type === "sombreros") {
-    resultPath = await appendSombreroToMonke(imageUri, assetPath, outputPath);
-  } else if (type === "outfits") {
-    resultPath = await appendOutfitToMonke(imageUri, assetPath, outputPath);
-  } else if (type === "gifs") {
-    resultPath = await compositeGIFOverImage(imageUri, assetPath, outputPath);
-  } else {
-    return res.status(404).json({ error: "Type not found" });
-  }
-
-  return res.status(200).sendFile(resultPath, (err) => {
-    if (err) {
-      res.status(500).json({
-        success: false,
-        message: "Failed to send the file",
-        error: err.message,
-      });
+  try {
+    if (type === "banners") {
+      resultPath = await appendMonkeToBanner(imageUri, assetPath, outputPath);
+    } else if (type === "wallpapers") {
+      resultPath = await appendMonkeToWallpaper(imageUri, assetPath, outputPath);
+    } else if (type === "watchfaces") {
+      resultPath = await appendMonkeToWatchFace(imageUri, assetPath, outputPath);
+    } else if (type === "pfp_backgrounds") {
+      resultPath = await appendMonkeToBackground(imageUri, assetPath, outputPath);
+    } else if (type === "sombreros") {
+      resultPath = await appendSombreroToMonke(imageUri, assetPath, outputPath);
+    } else if (type === "outfits") {
+      resultPath = await appendOutfitToMonke(imageUri, assetPath, outputPath);
+    } else if (type === "gifs") {
+      resultPath = await compositeGIFOverImage(imageUri, assetPath, outputPath);
+    } else {
+      return res.status(404).json({ error: "Type not found" });
     }
-  });
+
+    // Check if resultPath is valid
+    if (!resultPath || !fs.existsSync(resultPath)) {
+      return res.status(500).json({ error: "File could not be generated" });
+    }
+
+    return res.status(200).sendFile(resultPath, (err) => {
+      if (err) {
+        res.status(500).json({
+          success: false,
+          message: "Failed to send the file",
+          error: err.message,
+        });
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ error: "An error occurred during the process" });
+  }
 });
 
 app.get("/api/dressup/2/:number/nobg", async (req, res) => {
   const generation = 2;
   const number = req.params.number;
-  inputName = `SMB #${number}`;
-  imageUri = findImageUrisByName(jsonData, inputName).toString();
+  const inputName = `SMB #${number}`;
+  const imageUri = findImageUrisByName(jsonData, inputName).toString();
   const outputPath = path.join(__dirname, "..", "results", `result.png`);
 
-  const resultPath = await removeMonkeBackground(imageUri, outputPath);
-  return res.status(200).sendFile(resultPath, (err) => {
-    if (err) {
-      res.status(500).json({
-        success: false,
-        message: "Failed to send the file",
-        error: err.message,
-      });
+  try {
+    const resultPath = await removeMonkeBackground(imageUri, outputPath);
+
+    // Check if resultPath is valid
+    if (!resultPath || !fs.existsSync(resultPath)) {
+      return res.status(500).json({ error: "File could not be generated" });
     }
-  });
+
+    return res.status(200).sendFile(resultPath, (err) => {
+      if (err) {
+        res.status(500).json({
+          success: false,
+          message: "Failed to send the file",
+          error: err.message,
+        });
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ error: "An error occurred during the process" });
+  }
 });
 
 app.get("/api/dressup/3/:number/:key", (req, res) => {
@@ -176,6 +195,6 @@ app.get("/api/dressup/3/:number/:key", (req, res) => {
   const key = req.params.key;
 });
 
-app.listen(3000, () => {
-  console.log("API server is running on port 3000");
+app.listen(3005, () => {
+  console.log("API server is running on port 3005");
 });
