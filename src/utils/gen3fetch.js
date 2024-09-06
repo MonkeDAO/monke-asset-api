@@ -1,10 +1,12 @@
-const { heliusTk } = require("../config.json");
+require("dotenv").config();
+const heliusTk = process.env.heliusTk;
 const url = `https://mainnet.helius-rpc.com/?api-key=${heliusTk}`;
 const fs = require("fs");
 const path = require("path");
 let start = Date.now();
 let timeout = 60 * 60000;
 
+console.log(heliusTk);
 const getAssetsByGroup = async () => {
   if (Date.now() - start >= timeout) {
     console.log("Timeout reached, exiting loop.");
