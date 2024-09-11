@@ -93,7 +93,7 @@ async function appendMonkeToWatchFace(monkeyImageUrl, backgroundImagePath, outpu
     });
 
     transparentImage.scale(2);
-    backgroundImage.composite(transparentImage, 25, 25);
+    backgroundImage.composite(transparentImage, 25, 200);
 
     await backgroundImage.writeAsync(outputPath);
     console.log(`Image saved as ${outputPath}`);
