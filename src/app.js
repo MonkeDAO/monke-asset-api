@@ -107,6 +107,42 @@ app.get("/api/data/:generation/:number/:key", (req, res) => {
   }
 });
 
+app.get("/api/dressup/3/:number/gifs/:key", async (req, res) => {
+  const number = req.params.number;
+  const key = req.params.key;
+  const inputName = `SMB Gen3 #${number}`;
+  const imageUri = findGen3ImageUrisByName(gen3JsonData, inputName).toString();
+  console.log(imageUri);
+  const assetPath = path.join(__dirname, "..", "gen2assets", "gifs", key);
+  let outputPath, resultPath;
+
+  outputPath = path.join(__dirname, "..", "results", "result.gif");
+
+  console.log(outputPath);
+
+  try {
+    resultPath = await compositeGIFOverImage(imageUri, assetPath, outputPath);
+
+    console.log(resultPath);
+
+    if (!resultPath || !fs.existsSync(resultPath)) {
+      return res.status(500).json({ error: "File could not be generated" });
+    }
+
+    return res.status(200).sendFile(resultPath, (err) => {
+      if (err) {
+        res.status(500).json({
+          success: false,
+          message: "Failed to send the file",
+          error: err.message,
+        });
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ error: "An error occurred during the process" });
+  }
+});
+
 app.get("/api/dressup/2/:number/:type/:key", async (req, res) => {
   const number = req.params.number;
   const type = req.params.type;
@@ -187,12 +223,6 @@ app.get("/api/dressup/2/:number/nobg", async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: "An error occurred during the process" });
   }
-});
-
-app.get("/api/dressup/3/:number/:key", (req, res) => {
-  const generation = 2;
-  const number = req.params.number;
-  const key = req.params.key;
 });
 
 app.listen(3005, () => {
