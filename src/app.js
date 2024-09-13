@@ -116,7 +116,7 @@ app.get("/api/dressup/3/:number/gifs/:key", async (req, res) => {
   const assetPath = path.join(__dirname, "..", "gen2assets", "gifs", key);
   let outputPath, resultPath;
 
-  outputPath = path.join(__dirname, "..", "results", "result.gif");
+  outputPath = path.join(__dirname, "..", "gen3results", "result.gif");
 
   console.log(outputPath);
 

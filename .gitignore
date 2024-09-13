@@ -2,3 +2,4 @@ node_modules
 config.json
 /results
 .env
+/gen3results
