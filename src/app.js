@@ -196,6 +196,54 @@ app.get("/api/dressup/2/:number/:type/:key", async (req, res) => {
   }
 });
 
+app.get("/api/dressup/2/multibanners/:type/:n1/:n2?/:n3?/:n4?", async (req, res) => {
+  const type = req.params.type;
+  const n1 = req.params.n1;
+  const n2 = req.params.n2;
+  const n3 = req.params.n3;
+  const n4 = req.params.n4;
+
+  const imageUri1 = findImageUrisByName(jsonData, `SMB #${n1}`).toString();
+  const imageUri2 = findImageUrisByName(jsonData, `SMB #${n2}`).toString();
+  const imageUri3 = findImageUrisByName(jsonData, `SMB #${n3}`).toString();
+  const imageUri4 = findImageUrisByName(jsonData, `SMB #${n4}`).toString();
+
+  let imageUrls = [imageUri1, imageUri2, imageUri3, imageUri4];
+
+  imageUrls = imageUrls.filter((element) => element !== "");
+
+  console.log(imageUrls);
+
+  if (!imageUrls || !Array.isArray(imageUrls)) {
+    return res.status(400).json({ error: "Please provide an array of image URLs" });
+  }
+
+  const backgroundImagePath = path.join(__dirname, "..", "gen2assets", "multibanners", type);
+  console.log(backgroundImagePath);
+  const outputPath = path.join(__dirname, "..", "multiresults", `result.png`);
+  console.log(outputPath);
+
+  try {
+    const resultPath = await MultiMonkeBanner(imageUrls, backgroundImagePath, outputPath);
+
+    if (!resultPath || !fs.existsSync(resultPath)) {
+      return res.status(500).json({ error: "File could not be generated" });
+    }
+
+    return res.status(200).sendFile(resultPath, (err) => {
+      if (err) {
+        res.status(500).json({
+          success: false,
+          message: "Failed to send the file",
+          error: err.message,
+        });
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ error: "An error occurred during the process" });
+  }
+});
+
 app.get("/api/dressup/2/:number/nobg", async (req, res) => {
   const generation = 2;
   const number = req.params.number;
