@@ -3,6 +3,7 @@ const { GifCodec, GifFrame, BitmapImage } = require("gifwrap");
 const axios = require("axios");
 const fs = require("fs");
 const path = require("path");
+const { Readable } = require('stream');
 
 async function appendMonkeToWallpaper(monkeyImageUrl, backgroundImagePath, outputPath) {
   try {
@@ -29,11 +30,14 @@ async function appendMonkeToWallpaper(monkeyImageUrl, backgroundImagePath, outpu
     transparentImage.scale(3);
     backgroundImage.composite(transparentImage, 450, 2700);
 
-    await backgroundImage.writeAsync(outputPath);
-    console.log(`Image saved as ${outputPath}`);
-    return outputPath;
+    return new Promise((resolve, reject) => {
+      backgroundImage.getBuffer(Jimp.MIME_PNG, (err, buffer) => {
+        if (err) reject(err);
+        else resolve(buffer);
+      });
+    });
   } catch (err) {
-    console.error("Error:", err);
+    console.error("Error during monke wallpaper application:", err);
   }
 }
 
@@ -62,11 +66,14 @@ async function appendMonkeToBanner(monkeyImageUrl, backgroundImagePath, outputPa
     transparentImage.scale(1.75);
     backgroundImage.composite(transparentImage, 1500, 330);
 
-    await backgroundImage.writeAsync(outputPath);
-    console.log(`Image saved as ${outputPath}`);
-    return outputPath;
+    return new Promise((resolve, reject) => {
+      backgroundImage.getBuffer(Jimp.MIME_PNG, (err, buffer) => {
+        if (err) reject(err);
+        else resolve(buffer);
+      });
+    });
   } catch (err) {
-    console.error("Error:", err);
+    console.error("Error during monke banner application:", err);
   }
 }
 
@@ -95,11 +102,14 @@ async function appendMonkeToWatchFace(monkeyImageUrl, backgroundImagePath, outpu
     transparentImage.scale(2);
     backgroundImage.composite(transparentImage, 25, 200);
 
-    await backgroundImage.writeAsync(outputPath);
-    console.log(`Image saved as ${outputPath}`);
-    return outputPath;
+    return new Promise((resolve, reject) => {
+      backgroundImage.getBuffer(Jimp.MIME_PNG, (err, buffer) => {
+        if (err) reject(err);
+        else resolve(buffer);
+      });
+    });
   } catch (err) {
-    console.error("Error:", err);
+    console.error("Error during monke watch face application:", err);
   }
 }
 
@@ -128,11 +138,14 @@ async function appendMonkeToBackground(monkeyImageUrl, backgroundImagePath, outp
     transparentImage.scale(1);
     backgroundImage.composite(transparentImage, 0, 0);
 
-    await backgroundImage.writeAsync(outputPath);
-    console.log(`Image saved as ${outputPath}`);
-    return outputPath;
+    return new Promise((resolve, reject) => {
+      backgroundImage.getBuffer(Jimp.MIME_PNG, (err, buffer) => {
+        if (err) reject(err);
+        else resolve(buffer);
+      });
+    });
   } catch (err) {
-    console.error("Error:", err);
+    console.error("Error during monke background application:", err);
   }
 }
 
@@ -143,11 +156,14 @@ async function appendSombreroToMonke(monkeyImageUrl, backgroundImagePath, output
 
     monkeyImage.composite(backgroundImage, 0, 0);
 
-    await monkeyImage.writeAsync(outputPath);
-    console.log(`Image saved as ${outputPath}`);
-    return outputPath;
+    return new Promise((resolve, reject) => {
+      monkeyImage.getBuffer(Jimp.MIME_PNG, (err, buffer) => {
+        if (err) reject(err);
+        else resolve(buffer);
+      });
+    });
   } catch (err) {
-    console.error("Error:", err);
+    console.error("Error during sombrero application:", err);
   }
 }
 
@@ -158,9 +174,12 @@ async function appendOutfitToMonke(monkeyImageUrl, backgroundImagePath, outputPa
 
     monkeyImage.composite(backgroundImage, 0, 0);
 
-    await monkeyImage.writeAsync(outputPath);
-    console.log(`Image saved as ${outputPath}`);
-    return outputPath;
+    return new Promise((resolve, reject) => {
+      monkeyImage.getBuffer(Jimp.MIME_PNG, (err, buffer) => {
+        if (err) reject(err);
+        else resolve(buffer);
+      });
+    });
   } catch (err) {
     console.error("Error:", err);
   }
@@ -189,11 +208,14 @@ async function removeMonkeBackground(monkeyImageUrl, outputPath) {
 
     transparentImage.scale(1);
 
-    await transparentImage.writeAsync(outputPath);
-    console.log(`Image saved as ${outputPath}`);
-    return outputPath;
+    return new Promise((resolve, reject) => {
+      transparentImage.getBuffer(Jimp.MIME_PNG, (err, buffer) => {
+        if (err) reject(err);
+        else resolve(buffer);
+      });
+    });
   } catch (err) {
-    console.error("Error:", err);
+    console.error("Error during monke background removal:", err);
   }
 }
 
@@ -233,12 +255,9 @@ async function compositeGIFOverImage(imageUrl, gifPath, outputPath) {
 
     const outputGif = await gifCodec.encodeGif(outputFrames);
 
-    fs.writeFileSync(outputPath, outputGif.buffer);
-
-    console.log(`Animated GIF saved successfully to ${outputPath}`);
-    return outputPath;
+    return outputGif.buffer;
   } catch (error) {
-    console.error("Error:", error);
+    console.error("Error during GIF composition:", error);
   }
 }
 
@@ -251,30 +270,24 @@ async function multiMonkeBanner(monkeyImageUrls, backgroundImagePath, outputPath
     if (typeof backgroundImagePath !== "string" || !backgroundImagePath) {
       throw new Error("Invalid background image path.");
     }
-    if (typeof outputPath !== "string" || !outputPath) {
-      throw new Error("Invalid output path.");
-    }
-
-    if (!fs.existsSync(outputDirectory)) {
-      fs.mkdirSync(outputDirectory, { recursive: true });
-    }
-
     // Load the background image
     const backgroundImage = await Jimp.read(backgroundImagePath).catch((err) => {
       throw new Error(`Failed to read background image: ${err.message}`);
     });
+    const monkeyCount = monkeyImageUrls.length;
 
-    let offsetX = backgroundImage.bitmap.width - 200;
-    const offsetY = backgroundImage.bitmap.height - 330;
+    // Calculate the width available for monkeys (leaving some padding on the right side)
+    const availableWidth = backgroundImage.bitmap.width * 0.35; // Use 35% of the banner width
+    const monkeyWidth = availableWidth / monkeyCount;
 
-    for (const monkeyImageUrl of monkeyImageUrls) {
-      // Load each monkey image
-      const monkeyImage = await Jimp.read(monkeyImageUrl).catch((err) => {
-        throw new Error(`Failed to read monkey image from URL ${monkeyImageUrl}: ${err.message}`);
-      });
+    // Start from the right side, leaving some padding
+    let offsetX = backgroundImage.bitmap.width - 50;
+    const maxHeight = backgroundImage.bitmap.height * 0.7; // Reduce max height to 70% of banner height
 
-      // Ensure getCommonColor is defined and correctly implemented
+    for (const monkeyImageUrl of monkeyImageUrls.reverse()) {
+      const monkeyImage = await Jimp.read(monkeyImageUrl);
       const commonColor = await getCommonColor(monkeyImage);
+      
       if (!commonColor) {
         throw new Error("Failed to determine common color for transparency.");
       }
@@ -285,7 +298,6 @@ async function multiMonkeBanner(monkeyImageUrls, backgroundImagePath, outputPath
         0x00000000
       );
 
-      // Process pixels for transparency
       monkeyImage.scan(0, 0, monkeyImage.bitmap.width, monkeyImage.bitmap.height, (x, y, idx) => {
         const pixel = Jimp.intToRGBA(monkeyImage.getPixelColor(x, y));
         if (pixel.r === commonColor.r && pixel.g === commonColor.g && pixel.b === commonColor.b) {
@@ -298,23 +310,30 @@ async function multiMonkeBanner(monkeyImageUrls, backgroundImagePath, outputPath
         }
       });
 
-      // Scale the image safely
-      transparentImage.scale(1.75);
+      // Calculate scale factor to fit monkey within allocated width and height
+      const scaleWidth = monkeyWidth / transparentImage.bitmap.width;
+      const scaleHeight = maxHeight / transparentImage.bitmap.height;
+      const scaleFactor = Math.min(scaleWidth, scaleHeight, 0.9); // Cap at 90% of calculated scale
 
-      // Composite the transparent image onto the background
-      backgroundImage.composite(transparentImage, offsetX, offsetY);
+      transparentImage.scale(scaleFactor);
 
-      // Update offset for next image
-      offsetX -= transparentImage.bitmap.width * 0.75;
+      // Position the monkey at the bottom right, flush with the bottom
+      const monkeyY = backgroundImage.bitmap.height - transparentImage.bitmap.height;
+
+      // Composite the monkey onto the background
+      backgroundImage.composite(transparentImage, offsetX - transparentImage.bitmap.width, monkeyY);
+
+      // Move to the next monkey position
+      offsetX -= transparentImage.bitmap.width + 10; // 10px spacing between monkeys
     }
 
     // Write the final composite image to the output path
-    await backgroundImage.writeAsync(outputPath).catch((err) => {
-      throw new Error(`Failed to write output image: ${err.message}`);
+    return new Promise((resolve, reject) => {
+      backgroundImage.getBuffer(Jimp.MIME_PNG, (err, buffer) => {
+        if (err) reject(err);
+        else resolve(buffer);
+      });
     });
-
-    console.log(`Multi-monke banner saved as ${outputPath}`);
-    return outputPath;
   } catch (err) {
     console.error("Error during multi-monke banner creation:", err);
     throw err; // Rethrow error to be handled by calling function

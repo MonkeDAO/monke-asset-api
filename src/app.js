@@ -17,10 +17,21 @@ const {
   appendSombreroToMonke,
   appendOutfitToMonke,
   compositeGIFOverImage,
+  multiMonkeBanner
 } = require("./utils/gen2dressup");
 
 const monkeDataPath = path.join(__dirname, ".", "data", "monkeList.json");
 const gen3DataPath = path.join(__dirname, ".", "data", "gen3List.json");
+
+const formatKey = (type, key) => {
+  if (key.endsWith('.png') || (type === 'gifs' && key.endsWith('.gif'))) {
+    return key;
+  }
+  
+  const extension = type === 'gifs' ? '.gif' : '.png';
+  return `${key}${extension}`;
+}
+
 let jsonData, gen3JsonData;
 try {
   jsonData = JSON.parse(fs.readFileSync(monkeDataPath, "utf-8"));
@@ -28,7 +39,7 @@ try {
   gen3JsonData = JSON.parse(fs.readFileSync(gen3DataPath, "utf-8"));
   console.log(" Gen 3 JSON data loaded successfully");
 } catch (error) {
-  console.error("Error reading monke data:", error);
+  console.error("Error reading monke data:", error, {monkeDataPath});
   process.exit(1);
 }
 
@@ -113,32 +124,17 @@ app.get("/api/dressup/3/:number/gifs/:key", async (req, res) => {
   const inputName = `SMB Gen3 #${number}`;
   const imageUri = findGen3ImageUrisByName(gen3JsonData, inputName).toString();
   console.log(imageUri);
-  const assetPath = path.join(__dirname, "..", "gen2assets", "gifs", key);
-  let outputPath, resultPath;
-
-  outputPath = path.join(__dirname, "..", "gen3results", "result.gif");
-
-  console.log(outputPath);
+  const assetPath = path.join(__dirname, "..", "gen2assets", "gifs", formatKey("gifs", key));
 
   try {
-    resultPath = await compositeGIFOverImage(imageUri, assetPath, outputPath);
-
-    console.log(resultPath);
-
-    if (!resultPath || !fs.existsSync(resultPath)) {
-      return res.status(500).json({ error: "File could not be generated" });
+    const gifBuffer = await compositeGIFOverImage(imageUri, assetPath, outputPath);
+    if (!gifBuffer) {
+      return res.status(500).json({ error: "GIF could not be generated" });
     }
-
-    return res.status(200).sendFile(resultPath, (err) => {
-      if (err) {
-        res.status(500).json({
-          success: false,
-          message: "Failed to send the file",
-          error: err.message,
-        });
-      }
-    });
+    res.set('Content-Type', 'image/gif');
+    return res.status(200).send(gifBuffer);
   } catch (error) {
+    console.error('Error in catch block:', error, {number, key});
     res.status(500).json({ error: "An error occurred during the process" });
   }
 });
@@ -149,49 +145,39 @@ app.get("/api/dressup/2/:number/:type/:key", async (req, res) => {
   const key = req.params.key;
   const inputName = `SMB #${number}`;
   const imageUri = findImageUrisByName(jsonData, inputName).toString();
-  const assetPath = path.join(__dirname, "..", "gen2assets", type, key);
-  let outputPath, resultPath;
-
-  if (type === "gifs") {
-    outputPath = path.join(__dirname, "..", "results", "result.gif");
-  } else {
-    outputPath = path.join(__dirname, "..", "results", `result.png`);
-  }
+  const assetPath = path.join(__dirname, "..", "gen2assets", type, formatKey(type, key));
 
   try {
+    let resultBuffer;
+    let contentType = 'image/png';
+
     if (type === "banners") {
-      resultPath = await appendMonkeToBanner(imageUri, assetPath, outputPath);
+      resultBuffer = await appendMonkeToBanner(imageUri, assetPath);
     } else if (type === "wallpapers") {
-      resultPath = await appendMonkeToWallpaper(imageUri, assetPath, outputPath);
+      resultBuffer = await appendMonkeToWallpaper(imageUri, assetPath);
     } else if (type === "watchfaces") {
-      resultPath = await appendMonkeToWatchFace(imageUri, assetPath, outputPath);
+      resultBuffer = await appendMonkeToWatchFace(imageUri, assetPath);
     } else if (type === "pfp_backgrounds") {
-      resultPath = await appendMonkeToBackground(imageUri, assetPath, outputPath);
+      resultBuffer = await appendMonkeToBackground(imageUri, assetPath);
     } else if (type === "sombreros") {
-      resultPath = await appendSombreroToMonke(imageUri, assetPath, outputPath);
+      resultBuffer = await appendSombreroToMonke(imageUri, assetPath);
     } else if (type === "outfits") {
-      resultPath = await appendOutfitToMonke(imageUri, assetPath, outputPath);
+      resultBuffer = await appendOutfitToMonke(imageUri, assetPath);
     } else if (type === "gifs") {
-      resultPath = await compositeGIFOverImage(imageUri, assetPath, outputPath);
+      resultBuffer = await compositeGIFOverImage(imageUri, assetPath);
+      contentType = 'image/gif';
     } else {
       return res.status(404).json({ error: "Type not found" });
     }
 
-    // Check if resultPath is valid
-    if (!resultPath || !fs.existsSync(resultPath)) {
-      return res.status(500).json({ error: "File could not be generated" });
+    if (!resultBuffer) {
+      return res.status(500).json({ error: "Image could not be generated" });
     }
 
-    return res.status(200).sendFile(resultPath, (err) => {
-      if (err) {
-        res.status(500).json({
-          success: false,
-          message: "Failed to send the file",
-          error: err.message,
-        });
-      }
-    });
+    res.set('Content-Type', contentType);
+    return res.status(200).send(resultBuffer);
   } catch (error) {
+    console.error('Error in catch block dressup/2/:number/:type/:key:', error, {type, key, number});
     res.status(500).json({ error: "An error occurred during the process" });
   }
 });
@@ -224,22 +210,12 @@ app.get("/api/dressup/2/multibanners/:type/:n1/:n2?/:n3?/:n4?", async (req, res)
   console.log(outputPath);
 
   try {
-    const resultPath = await MultiMonkeBanner(imageUrls, backgroundImagePath, outputPath);
+    const resultBuffer = await multiMonkeBanner(imageUrls, backgroundImagePath, outputPath);
 
-    if (!resultPath || !fs.existsSync(resultPath)) {
-      return res.status(500).json({ error: "File could not be generated" });
-    }
-
-    return res.status(200).sendFile(resultPath, (err) => {
-      if (err) {
-        res.status(500).json({
-          success: false,
-          message: "Failed to send the file",
-          error: err.message,
-        });
-      }
-    });
+    res.set('Content-Type', 'image/png');
+    return res.status(200).send(resultBuffer);
   } catch (error) {
+    console.error('Error in catch block multiMonkeBanner:', error, {type, n1, n2, n3, n4});
     res.status(500).json({ error: "An error occurred during the process" });
   }
 });
@@ -252,24 +228,45 @@ app.get("/api/dressup/2/:number/nobg", async (req, res) => {
   const outputPath = path.join(__dirname, "..", "results", `result.png`);
 
   try {
-    const resultPath = await removeMonkeBackground(imageUri, outputPath);
+    const resultBuffer = await removeMonkeBackground(imageUri, outputPath);
 
-    // Check if resultPath is valid
-    if (!resultPath || !fs.existsSync(resultPath)) {
-      return res.status(500).json({ error: "File could not be generated" });
+    res.set('Content-Type', 'image/png');
+    return res.status(200).send(resultBuffer);
+  } catch (error) {
+    console.error('Error in catch block removeMonkeBackground:', error, {number});
+    res.status(500).json({ error: "An error occurred during the process" });
+  }
+});
+
+app.get("/api/assets/:type", async (req, res) => {
+  const type = req.params.type;
+  const assetPath = path.join(__dirname, "..", "gen2assets", type);
+
+  try {
+    if (!fs.existsSync(assetPath)) {
+      return res.status(404).json({ error: `Asset type "${type}" does not exist` });
     }
+    const files = fs.readdirSync(assetPath);
+    const assetNames = files
+      .filter(file => {
+        const ext = path.extname(file).toLowerCase();
+        return ['.png', '.gif', '.jpg', '.jpeg'].includes(ext);
+      })
+      .map(file => path.basename(file, path.extname(file)));
 
-    return res.status(200).sendFile(resultPath, (err) => {
-      if (err) {
-        res.status(500).json({
-          success: false,
-          message: "Failed to send the file",
-          error: err.message,
-        });
-      }
+    const formattedAssetNames = assetNames.map(name => 
+      name.split(/[-_]/)
+        .map(word => word.charAt(0) + word.slice(1))
+        .join(' ')
+    );
+
+    res.status(200).json({
+      type: type,
+      assets: formattedAssetNames
     });
   } catch (error) {
-    res.status(500).json({ error: "An error occurred during the process" });
+    console.error(`Error reading assets for type ${type}:`, error);
+    res.status(500).json({ error: "An error occurred while fetching assets" });
   }
 });
 
